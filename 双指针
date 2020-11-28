@@ -1,1 +1,100 @@
 双指针主要用于遍历数组，两个指针指向不同的元素，从而协同完成任务。也可以延伸到多个数组的多个指针。
+
+1、快慢指针
+对于链表找环路的问题，有一个通用的解法——快慢指针（Floyd 判圈法）。给定两个指针，
+分别命名为 slow 和 fast，起始位置在链表的开头。每次 fast 前进两步，slow 前进一步。如果 fast
+可以走到尽头，那么说明没有环路；如果 fast 可以无限走下去，那么说明一定有环路，且一定存
+在一个时刻 slow 和 fast 相遇。当 slow 和 fast 第一次相遇时，我们将 fast 重新移动到链表开头，并
+让 slow 和 fast 每次都前进一步。当 slow 和 fast 第二次相遇时，相遇的节点即为环路的开始点。
+
+原理解释：由于快指针比慢指针快一倍，所以每一次相遇意味着慢指针已经走了一个环的路程。接下来快指针从开头开始，慢指针继续，相当于共同朝着节点出发。
+
+struct ListNode {
+int val;
+ListNode *next;
+ListNode(int x) : val(x), next(nullptr) {}
+};
+
+ListNode *detectCycle(ListNode *head) {
+ListNode *slow = head, *fast = head;
+// 判断是否存在环路
+do {
+if (!fast || !fast->next) return nullptr;
+fast = fast->next->next;
+slow = slow->next;
+} while (fast != slow);
+// 如果存在，查找环路节点
+fast = head;
+while (fast != slow){
+slow = slow->next;
+fast = fast->next;
+}
+return fast;
+}
+
+2、反向求sum指针
+因为数组已经排好序，我们可以采用方向相反的双指针来寻找这两个数字，一个初始指向最
+小的元素，即数组最左边，向右遍历；一个初始指向最大的元素，即数组最右边，向左遍历。
+如果两个指针指向元素的和等于给定值，那么它们就是我们要的结果。如果两个指针指向元
+素的和小于给定值，我们把左边的指针右移一位，使得当前的和增加一点。如果两个指针指向元
+素的和大于给定值，我们把右边的指针左移一位，使得当前的和减少一点。
+可以证明，对于排好序且有解的数组，双指针一定能遍历到最优解。证明方法如下：假设最
+优解的两个数的位置分别是 l 和 r。我们假设在左指针在 l 左边的时候，右指针已经移动到了 r；
+此时两个指针指向值的和小于给定值，因此左指针会一直右移直到到达 l。同理，如果我们假设
+在右指针在 r 右边的时候，左指针已经移动到了 l；此时两个指针指向值的和大于给定值，因此
+右指针会一直左移直到到达 r。所以双指针在任何时候都不可能处于 (l,r) 之间，又因为不满足条
+件时指针必须移动一个，所以最终一定会收敛在 l 和 r。
+
+vector<int> twoSum(vector<int>& numbers, int target) {
+int l = 0, r = numbers.size() - 1, sum;
+while (l < r) {
+sum = numbers[l] + numbers[r];
+if (sum == target) break;
+if (sum < target) ++l;
+else --r;
+}
+return vector<int>{l + 1, r + 1};
+}
+
+
+3、滑动窗口
+例题
+给定两个字符串 S 和 T，求 S 中包含 T 所有字符的最短连续子字符串的长度，同时要求时间
+复杂度不得超过 O(n)。
+
+
+本题使用滑动窗口求解，即两个指针 l 和 r 都是从最左端向最右端移动，且 l 的位置一定在
+r 的左边或重合。注意本题虽然在 for 循环里出现了一个 while 循环，但是因为 while 循环负责移
+动 l 指针，且 l 只会从左到右移动一次，因此总时间复杂度仍然是 O(n)。本题使用了长度为 128
+的数组来映射字符，也可以用哈希表替代；其中 chars 表示目前每个字符缺少的数量，flag 表示
+每个字符是否在 T 中存在。
+
+string minWindow(string S, string T) {
+vector<int> chars(128, 0);
+vector<bool> flag(128, false);
+// 先统计T中的字符情况
+for (int i = 0; i < T.size(); ++i) {
+flag[T[i]] = true;
+++chars[T[i]];
+}
+// 移动滑动窗口，不断更改统计数据
+int cnt = 0, l = 0, min_l = 0, min_size = S.size() + 1;
+for (int r = 0; r < S.size(); ++r) {
+if (flag[S[r]]) {
+if (--chars[S[r]] >= 0) {
+++cnt;
+}
+// 若目前滑动窗口已包含T中全部字符，
+// 则尝试将l右移，在不影响结果的情况下获得最短子字符串
+while (cnt == T.size()) {
+if (r - l + 1 < min_size) {
+min_l = l;
+min_size = r - l + 1;
+}
+if (flag[S[l]] && ++chars[S[l]] > 0) {
+--cnt;
+}
+++l;
+} } }
+return min_size > S.size()? "": S.substr(min_l, min_size);
+}
