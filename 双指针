@@ -98,3 +98,25 @@ if (flag[S[l]] && ++chars[S[l]] > 0) {
 } } }
 return min_size > S.size()? "": S.substr(min_l, min_size);
 }
+
+
+4、关于length()和size(),length
+https://blog.csdn.net/weixin_44212488/article/details/110196408
+
+length是数组的属性；
+length()——String的方法；
+size()——集合的方法；
+
+数组用法
+public static void main(String[] args) {
+    int[] intArray = {1,2,3};
+    System.out.println("这个数组的长度为：" + intArray.length);
+}
+string用法
+public static void main(String[] args) {
+    String str = "HelloWorld";
+    System.out.println("这个字符串的长度为：" + str.length());
+}
+
+
+length的源码远要比size简洁的多，所以一般string和数组尽可能的用length()和length可以显著的提升系统的性能
